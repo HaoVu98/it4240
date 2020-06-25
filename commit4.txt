@@ -1,0 +1,18 @@
+package vn.pharmarcy.controllers;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+@RequestMapping("sale")
+public class SaleController {
+	@RequestMapping("page")
+	public String sale() {
+		return "sale.page";
+	}
+
+	@RequestMapping("createBillPage")
+	public String createDrug() {
+		return "createBill.page";
+	}
+}

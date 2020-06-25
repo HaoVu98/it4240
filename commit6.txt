@@ -1,0 +1,66 @@
+@Controller
+@RequestMapping("supplier")
+public class SupplierController {
+
+	@Autowired
+	private SupplierService supplierService;
+	@Autowired
+	private SupplierPersistence supplierPersistence;
+
+	@RequestMapping("page")
+	public String supplier() {
+		return "supplier.page";
+	}
+
+	@RequestMapping("create")
+	public String create() {
+		return "supplier.create";
+	}
+
+	@RequestMapping("update")
+	public String view() {
+		return "supplier.update";
+	}
+
+	@RequestMapping("list")
+	public @ResponseBody GridData list(@RequestBody GridCondition condition) {
+		return supplierPersistence.filter(condition);
+	}
+
+	@RequestMapping("createSupplier")
+	public @ResponseBody ResponseMessage createSupplier(@RequestBody Supplier supplier) {
+		System.out.println("---");
+		long id = supplierService.createSupplier(supplier);
+		if(id > 0) 
+			return ResponseMessage.SUCCESS();
+		return ResponseMessage.ERROR();
+	}
+
+	@RequestMapping("load") 
+	public @ResponseBody Supplier load(@RequestParam long id) {
+		System.out.println("id : " + id);
+		Supplier supplier = supplierPersistence.find(id);
+		System.out.println("name  : " + supplier.getName());
+		return supplier;
+	}
+
+	@RequestMapping("deleteSupplier")
+	public @ResponseBody ResponseMessage delete(@RequestBody Long[] delIds) {
+		if(delIds != null && delIds.length > 0) {
+			for (Long id : delIds) {
+				supplierService.deleteSupplier(id);
+			}
+		}
+		return ResponseMessage.SUCCESS(delIds);
+	}
+
+	@RequestMapping("updateSupplier")
+	public @ResponseBody ResponseMessage updateSupplier(@RequestBody Supplier command) {
+
+		long id = supplierService.updateSupplier(command.getId(), command.getName(), command.getPhoneNumber(), command.getAddress(), 
+				command.getEmail(), command.getStatus(), command.getNote());
+		if(id > 0) 
+			return ResponseMessage.SUCCESS();
+		return ResponseMessage.ERROR();
+	}
+}

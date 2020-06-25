@@ -1,0 +1,159 @@
+package vn.pharmarcy.installation;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.hibernate.HibernateException;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.ConfigHelper;
+import org.hibernate.tool.hbm2ddl.DatabaseMetadata;
+
+public class SchemaUpdate {
+
+	private static final Log log = LogFactory.getLog( SchemaUpdate.class );
+	private String updateFile = "/update.sql";
+	private Connection connection;
+	private Configuration configuration;
+	private Dialect dialect;
+	private List exceptions;
+
+	public SchemaUpdate(Configuration cfg, Connection connection) {		
+		this.configuration = cfg;
+		this.dialect = Dialect.getDialect( cfg.getProperties() );
+		this.connection = connection;
+		exceptions = new ArrayList();
+	}	
+
+	/**
+	 * Execute the schema updates
+	 *
+	 * @param script print all DDL to the console
+	 */
+	public void execute(boolean script, boolean doUpdate) {
+
+		log.info( "Running hbm2ddl schema update" );
+
+		Statement stmt = null;
+
+		Reader importFileReader = null;
+
+		exceptions.clear();
+
+		try {
+
+			DatabaseMetadata meta = null;
+			try {
+				log.info( "fetching database metadata" );				
+				meta = new DatabaseMetadata( connection, dialect );
+				stmt = connection.createStatement();
+
+				InputStream stream = ConfigHelper.getResourceAsStream( updateFile );
+				importFileReader = new InputStreamReader( stream );
+			}
+			catch ( SQLException sqle ) {
+				exceptions.add( sqle );
+				log.error( "could not get database metadata", sqle );
+				throw sqle;
+			}
+			catch ( HibernateException e ) {
+				log.debug( "import file not found: " + updateFile );
+			}
+
+			log.info( "updating schema" );
+
+			String[] createSQL = configuration.generateSchemaUpdateScript( dialect, meta );
+			for ( int j = 0; j < createSQL.length; j++ ) {
+
+				final String sql = createSQL[j];
+				try {
+					if ( script ) {
+						System.out.println( sql );
+					}
+					if ( doUpdate ) {
+						log.debug( sql );
+						stmt.executeUpdate( sql );
+					}
+				}
+				catch ( SQLException e ) {
+					exceptions.add( e );
+					log.error( "Unsuccessful: " + sql );
+					log.error( e.getMessage() );
+				}
+			}
+			if(importFileReader != null) {
+				updateScript(importFileReader, stmt);
+			}
+
+			log.info( "schema update complete" );
+
+		}
+		catch ( Exception e ) {
+			exceptions.add( e );
+			log.error( "could not complete schema update", e );
+		}
+		finally {
+
+			try {
+				if ( stmt != null ) {
+					stmt.close();
+				}
+			}
+			catch ( Exception e ) {
+				exceptions.add( e );
+				log.error( "Error closing connection", e );
+			}
+
+		}
+	}
+
+	private void updateScript(Reader importFileReader, Statement statement)	throws IOException {
+		log.info( "Executing import script: " + updateFile );
+		BufferedReader reader = new BufferedReader( importFileReader );
+		for ( String sql = reader.readLine(); sql != null; sql = reader.readLine() ) {
+			try {
+				String trimmedSql = sql.trim();
+				if ( trimmedSql.length() == 0 ||
+				     trimmedSql.startsWith( "--" ) ||
+				     trimmedSql.startsWith( "//" ) ||
+				     trimmedSql.startsWith( "/*" ) ) {
+					continue;
+				}
+				else {
+					if ( trimmedSql.endsWith( ";" ) ) {
+						trimmedSql = trimmedSql.substring( 0, trimmedSql.length() - 1 );
+					}
+					log.debug( trimmedSql );
+					statement.execute( trimmedSql );
+				}
+			}
+			catch ( SQLException e ) {
+				log.error( "Error closing connection", e );
+			}			
+		}
+	}
+
+	public void setUpdateFile(String filename) {
+		updateFile = filename;		
+	}
+
+	/**
+	 * Returns a List of all Exceptions which occured during the export.
+	 *
+	 * @return A List containig the Exceptions occured during the export
+	 */
+	public List getExceptions() {
+		return exceptions;
+	}
+
+}
