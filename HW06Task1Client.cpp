@@ -1,4 +1,4 @@
-// HW06Task1Client.cpp : Defines the entry point for the console application.
+// HW06Task1Client.cpp : Defines the entry point for the
 //
 
 
@@ -148,7 +148,7 @@ int main()
 	if (WSAStartup(wVersion, &wsaData))
 		printf("Version is not supported\n");
 
-	//Step 2: Construct socket	
+	//2 Construct socket	
 	SOCKET client;
 	client = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
@@ -175,7 +175,7 @@ int main()
 	int disconnect = 0;
 	int state = UNDEFINED;
 	printf("Login\n");
-	//Send message
+	
 	do {
 		
 		ret = enterUsername(client, buff, BUFF_SIZE);
