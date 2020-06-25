@@ -1,0 +1,36 @@
+@Controller
+@RequestMapping("unitpackage")
+public class UnitPackageController {
+
+	@Autowired
+	private UnitPackagePersistence unitPackagePersistence;
+
+	@Autowired
+	private UnitPackageService unitPackageService;
+
+	@RequestMapping("page")
+	public String unitpackage() {
+		return "unitpackage.page";
+	}
+
+	@RequestMapping("list")
+	public @ResponseBody GridData list(@RequestBody GridCondition condition) {
+		return unitPackagePersistence.filter(condition);
+	}
+
+	@RequestMapping("create")
+	public @ResponseBody ResponseMessage create(@RequestParam long id ,@RequestParam String name) {
+		if(id == 0) {  // create
+			return ResponseMessage.SUCCESS(unitPackageService.create(name));
+		} else {
+			// update
+			return ResponseMessage.SUCCESS(unitPackageService.update(id, name));
+		}
+	}
+
+	@RequestMapping("delete")
+	public @ResponseBody ResponseMessage delete(@RequestBody long delId) {
+		unitPackageService.delete(delId);
+		return ResponseMessage.SUCCESS(delId);
+	}
+}
