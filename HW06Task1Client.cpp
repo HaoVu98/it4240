@@ -15,7 +15,7 @@
 #define PASSWORD_MSG 25
 #define LOGOUT_MSG 35
 
-#define USERNAME_NOTFOUND -18
+#define USERNAME_NOTFOUND -10
 #define USERNAME_CORRECT 18
 
 #define PASSWORD_INCORRECT -28
@@ -71,7 +71,7 @@ int sendExt(SOCKET connSock, char *buff, int dataLen) {
 }
 
 /*Scan username and check account
-return opCode
+
 */
 int enterUsername(SOCKET sock, char * buff, int buffSize) {
 	int ret;
@@ -97,10 +97,9 @@ int enterUsername(SOCKET sock, char * buff, int buffSize) {
 	}
 	return optCode;
 }
-/*Scan pass
-return opCode
+
 */
-int enterPassword(SOCKET sock, char * buff, int buffSize) {
+int enterPassword(SOCKET sock, char * buff, int buffSize){
 	int ret;
 	char optCode = -1;
 	while (optCode != PASSWORD_CORRECT && optCode != ACC_BLOCKED && ACC_LOGINED) {
