@@ -1,0 +1,80 @@
+package vn.pharmarcy.controllers;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import vn.pharmarcy.adapters.GridData;
+import vn.pharmarcy.command.DrugCommand;
+import vn.pharmarcy.command.GridCondition;
+import vn.pharmarcy.command.ResponseMessage;
+import vn.pharmarcy.model.Drug;
+import vn.pharmarcy.persistence.DrugPersistence;
+import vn.pharmarcy.services.DrugService;
+
+@Controller
+@RequestMapping("drug")
+public class DrugController {
+
+	@Autowired
+	private DrugService drugService;
+
+	@Autowired
+	private DrugPersistence drugPersistence;
+
+	@RequestMapping("page")
+	public String drug() {
+		return "drug.page";
+	}
+
+	@RequestMapping("createPage")
+	public String createDrug() {
+		return "createDrug.page";
+	}
+
+	@RequestMapping("updatePage")
+	public String updatePage() {
+		return "updateDrug.page";
+	}
+
+	@RequestMapping("list")
+	public @ResponseBody GridData list(@RequestBody GridCondition condition) {
+		return drugPersistence.filter(condition);
+	}
+
+	@RequestMapping("create")
+	public @ResponseBody ResponseMessage create(@RequestBody DrugCommand command) {
+		long id = drugService.createDrug(command);
+		if(id > 0) 
+			return ResponseMessage.SUCCESS();
+		return ResponseMessage.ERROR();
+	}
+
+	@RequestMapping("load") 
+	public @ResponseBody Drug load(@RequestParam long id) {
+		System.out.println("id : " + id);
+		Drug drug = drugPersistence.find(id);
+		System.out.println("name : " + drug.getName());
+		return drug;
+	}
+
+	@RequestMapping("update")
+	public @ResponseBody ResponseMessage update(@RequestBody DrugCommand command) {
+		long id = drugService.updateDrug(command);
+		if(id > 0) 
+			return ResponseMessage.SUCCESS();
+		return ResponseMessage.ERROR();
+	}
+
+	@RequestMapping("delete")
+	public @ResponseBody ResponseMessage delete(@RequestBody Long[] delIds) {
+		if(delIds != null && delIds.length > 0) {
+			for (Long id : delIds) {
+				drugService.deleteDrug(id);
+			}
+		}
+		return ResponseMessage.SUCCESS(delIds);
+	}
+} 
